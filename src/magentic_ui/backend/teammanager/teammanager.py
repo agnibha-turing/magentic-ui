@@ -300,6 +300,14 @@ class TeamManager:
                     pass
                 else:
                     config_params["browser_headless"] = False
+            
+            # Add pharma agent settings from environment if available
+            import os
+            if os.environ.get("PHARMA_AGENT_ENABLED", "False") == "True":
+                config_params["pharma_agent_enabled"] = True
+                # pharma_data_dir is already converted to absolute path by CLI
+                config_params["pharma_data_dir"] = os.environ.get("PHARMA_DATA_DIR", "mock_data")
+            
             magentic_ui_config = MagenticUIConfig(**config_params)  # type: ignore
             self.team = cast(
                 Team,

@@ -7,6 +7,7 @@ from autogen_core.models import ChatCompletionClient
 
 from .agents import USER_PROXY_DESCRIPTION, CoderAgent, FileSurfer, WebSurfer
 from .agents.mcp import McpAgent
+from .agents.pharma_investigation import create_pharma_investigation_agent
 from .agents.users import DummyUserProxy, MetadataUserProxy
 from .agents.web_surfer import WebSurferConfig
 from .approval_guard import (
@@ -225,6 +226,18 @@ async def get_task_team(
         for config in magentic_ui_config.mcp_agent_configs
     ]
 
+    # Setup pharma investigation agent if enabled
+    pharma_agent = None
+    if magentic_ui_config.pharma_agent_enabled:
+        pharma_model_client = get_model_client(
+            magentic_ui_config.model_client_configs.orchestrator  # Use orchestrator model
+        )
+        pharma_agent = create_pharma_investigation_agent(
+            name="pharma_investigator",
+            model_client=pharma_model_client,
+            data_dir=magentic_ui_config.pharma_data_dir,
+        )
+
     if (
         orchestrator_config.memory_controller_key is not None
         and orchestrator_config.retrieve_relevant_plans in ["reuse", "hint"]
@@ -246,6 +259,8 @@ async def get_task_team(
         assert file_surfer is not None
         team_participants.extend([coder_agent, file_surfer])
     team_participants.extend(mcp_agents)
+    if pharma_agent is not None:
+        team_participants.append(pharma_agent)
 
     team = GroupChat(
         participants=team_participants,

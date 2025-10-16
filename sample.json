@@ -1,0 +1,1082 @@
+{
+    "episode_id": "hitl-chat-20251010143022",
+    "env": "ClinicalSupplyChatEnv-HITL-v1",
+    "version": "2.0-RL-Ready",
+    "scope": [
+      "Pharma",
+      "Clinical trial supply chain management"
+    ],
+    
+    "metadata": {
+      "generated_at": "2025-10-10T14:30:22Z",
+      "data_source": "historical",
+      "scenario_type": "temp_excursion_with_qa_hold",
+      "complexity": "high",
+      "expected_duration_minutes": 45
+    },
+  
+    "context": {
+      "shipment": {
+        "shipment_id": "SHP-001-1",
+        "study_code": "BLZ-137",
+        "product": "DrugX",
+        "ndc": "NDC-0006-5331-01",
+        "batch_id": "LOT-003-A"
+      },
+      "route": {
+        "origin_site": "MainDC",
+        "origin_country": "DE",
+        "destination_site": "SITE-001",
+        "destination_country": "NL",
+        "route_key": "DE->NL"
+      },
+      "timing": {
+        "dispatch_dt": "2025-07-19T06:00:00Z",
+        "eta_original": "2025-07-25T18:00:00Z",
+        "eta_current": "2025-07-27T18:00:00Z",
+        "current_timestamp": "2025-07-24T10:00:00Z",
+        "lead_days_planned": 6,
+        "delay_days_actual": 2,
+        "hours_until_eta": 62
+      },
+      "supply": {
+        "quantity_units": 50,
+        "unit_cost_usd": 1416,
+        "total_value_usd": 70800,
+        "expiry_date": "2026-10-23",
+        "days_to_expiry": 456,
+        "mfg_date": "2024-10-16",
+        "pack_size": 90,
+        "batch_status": "Released"
+      },
+      "alerts": {
+        "cold_chain_alert": {
+          "alert_type": "TEMP_EXCURSION",
+          "start_timestamp": "2025-07-23T14:30:00Z",
+          "end_timestamp": "2025-07-23T16:30:00Z",
+          "max_temp_c": 29.3,
+          "threshold_c": 8.0,
+          "duration_hours": 2.0,
+          "rule_triggered": "TEMP_GT_27C_2H"
+        },
+        "shipment_status": "Quarantined"
+      },
+      "supplier": {
+        "supplier_id": "SPLR-B",
+        "otif_pct": 46.2,
+        "avg_delay_days": 2.02,
+        "performance_month": "2025-07"
+      },
+      "sla": {
+        "metric": "OnTimeRelease",
+        "target_pct": 95.0,
+        "current_pct": 87.3,
+        "breach_risk": "HIGH"
+      },
+      "recent_waste_context": {
+        "similar_incidents_last_30d": 3,
+        "avg_waste_units": 9.0,
+        "avg_waste_cost_usd": 1416.0,
+        "primary_reason": "Quarantine"
+      }
+    },
+  
+    "state": {
+      "numeric_features": {
+        "temp_current_c": 29.3,
+        "temp_threshold_c": 8.0,
+        "temp_excursion_duration_hrs": 2.0,
+        "days_to_expiry": 456,
+        "delay_days": 2,
+        "hours_until_eta": 62,
+        "sla_target": 0.95,
+        "sla_current": 0.873,
+        "sla_gap": -0.077,
+        "supplier_otif": 0.462,
+        "supplier_avg_delay": 2.02,
+        "quantity_at_risk": 50,
+        "value_at_risk_usd": 70800,
+        "recent_waste_avg_units": 9.0,
+        "recent_waste_avg_cost": 1416.0,
+        "similar_incidents_30d": 3
+      },
+      "categorical_features": {
+        "shipment_status": "Quarantined",
+        "alert_type": "TEMP_EXCURSION",
+        "route_key": "DE->NL",
+        "supplier_id": "SPLR-B",
+        "study_code": "BLZ-137",
+        "batch_status": "Released",
+        "breach_risk_level": "HIGH"
+      },
+      "temporal_context": {
+        "time_since_dispatch_hrs": 82,
+        "time_since_alert_hrs": 19.5,
+        "time_to_expiry_days": 456,
+        "time_to_eta_hrs": 62
+      },
+      "derived_features": {
+        "risk_score": 0.78,
+        "urgency_score": 0.65,
+        "complexity_score": 0.82,
+        "potential_waste_pct": 0.18
+      }
+    },
+  
+    "observation": {
+      "available_data_sources": [
+        "logistics_shipments",
+        "sensor_alerts",
+        "sensor_telemetry",
+        "wms_goods_movements",
+        "trialops_events",
+        "finance_waste_log",
+        "supplier_performance_sla",
+        "wms_lots",
+        "wms_quarantine_log"
+      ],
+      "query_history": [],
+      "conversation_buffer": [],
+      "artifacts_generated": []
+    },
+  
+    "action_space": {
+      "type": "hierarchical",
+      "high_level_actions": [
+        "investigate_root_cause",
+        "analyze_accountability", 
+        "recommend_intervention",
+        "generate_compliance_report"
+      ],
+      "low_level_actions": {
+        "investigate_root_cause": {
+          "query_sensor_telemetry": {
+            "params": ["shipment_id", "time_window"],
+            "returns": "temperature_profile"
+          },
+          "query_logistics_events": {
+            "params": ["shipment_id"],
+            "returns": "shipment_timeline"
+          },
+          "query_qa_events": {
+            "params": ["shipment_id", "batch_id"],
+            "returns": "qa_hold_history"
+          },
+          "query_trialops_events": {
+            "params": ["site_id", "date_range"],
+            "returns": "site_operational_events"
+          },
+          "join_audit_trail": {
+            "params": ["multiple_sources"],
+            "returns": "unified_timeline"
+          }
+        },
+        "analyze_accountability": {
+          "compute_time_attribution": {
+            "params": ["timeline", "sla_target"],
+            "returns": "owner_contributions"
+          },
+          "identify_bottleneck": {
+            "params": ["timeline"],
+            "returns": "critical_path_owner"
+          }
+        },
+        "recommend_intervention": {
+          "conditional_release": {
+            "conditions": ["temp_duration", "stability_data"],
+            "risk_level": "medium"
+          },
+          "reject_and_reship": {
+            "conditions": ["quality_failure"],
+            "risk_level": "low"
+          },
+          "expedite_qa_review": {
+            "conditions": ["sla_breach_imminent"],
+            "risk_level": "medium"
+          },
+          "request_carrier_capa": {
+            "conditions": ["carrier_accountability"],
+            "risk_level": "low"
+          }
+        },
+        "generate_compliance_report": {
+          "create_audit_document": {
+            "sections": ["header", "timeline", "evidence", "decision", "signoff"],
+            "format": "GxP_compliant"
+          },
+          "assign_action_owners": {
+            "params": ["recommendations"],
+            "returns": "owner_action_map"
+          }
+        }
+      }
+    },
+  
+    "goals": [
+      "Create a digital audit trail across RTSM/IRT, WMS, and Logistics",
+      "Detect and explain bottlenecks with accountable owner and timestamp",
+      "Recommend next best actions that respect cold-chain, expiry, and SLA",
+      "Minimize waste cost while maintaining compliance and quality",
+      "Generate GxP-compliant documentation with full traceability"
+    ],
+  
+    "conversation": [
+      {
+        "turn_id": 1,
+        "role": "human",
+        "utterance": "Investigate delay for shipment SHP-001-1 from MainDC to SITE-001. Any cold-chain excursions? Who is accountable?",
+        "timestamp": "2025-07-24T10:00:00Z",
+        "intent": "investigate_delay_with_accountability"
+      },
+      {
+        "turn_id": 2,
+        "role": "assistant",
+        "utterance": "Let me correlate Logistics, WMS, RTSM, and sensor alerts to build an audit trail…",
+        "timestamp": "2025-07-24T10:00:05Z",
+        
+        "reasoning": {
+          "cot": {
+            "steps": [
+              {
+                "step_id": 1,
+                "description": "Join logistics_shipments to sensor_alerts by shipment_id to identify temperature excursions",
+                "action": "query_sensor_telemetry",
+                "data_sources": ["logistics_shipments", "sensor_alerts"],
+                "key_finding": "TEMP_EXCURSION detected at 29.3°C for 2 hours starting 2025-07-23T14:30:00Z"
+              },
+              {
+                "step_id": 2,
+                "description": "Query wms_quarantine_log to determine QA response to temperature alert",
+                "action": "query_qa_events",
+                "data_sources": ["wms_quarantine_log"],
+                "key_finding": "QA hold initiated within 4 hours of alert detection"
+              },
+              {
+                "step_id": 3,
+                "description": "Cross-reference trialops_events at SITE-001 to identify any site-level delays",
+                "action": "query_trialops_events",
+                "data_sources": ["trialops_events"],
+                "key_finding": "SHORTAGE_START event on 2025-07-17 due to missing regulatory documentation"
+              },
+              {
+                "step_id": 4,
+                "description": "Compute accountability by analyzing time contribution of each owner against SLA target",
+                "action": "compute_time_attribution",
+                "data_sources": ["audit_timeline"],
+                "key_finding": "Carrier: 60% (temp excursion), QA: 30% (hold duration), Site: 10% (doc prep)"
+              }
+            ],
+            "conclusion": "Primary delay caused by carrier temperature excursion triggering QA hold; secondary factor is site documentation gap"
+          },
+  
+          "tot": {
+            "root_question": "What is the primary cause of shipment SHP-001-1 delay?",
+            "branches": [
+              {
+                "branch_id": 1,
+                "hypothesis": "Temperature excursion by carrier → triggers mandatory QA hold → delays release",
+                "supporting_evidence": [
+                  "Sensor alert shows 29.3°C for 2 hours (exceeds 8°C threshold)",
+                  "QA protocol requires hold for any temp excursion >2hrs",
+                  "Historical pattern: 78% of temp excursions lead to 12-24hr QA review"
+                ],
+                "contradicting_evidence": [],
+                "confidence_score": 0.85,
+                "expected_outcome": "12-48 hour delay if conditional release approved",
+                "selected": true
+              },
+              {
+                "branch_id": 2,
+                "hypothesis": "Site documentation missing at activation → blocks shipment receipt",
+                "supporting_evidence": [
+                  "SHORTAGE_START event on 2025-07-17",
+                  "Site SITE-001 had regulatory doc gap",
+                  "Resolved on 2025-07-24 (7 days later)"
+                ],
+                "contradicting_evidence": [
+                  "Documentation issue pre-dates this specific shipment",
+                  "Multiple shipments affected, not just SHP-001-1"
+                ],
+                "confidence_score": 0.70,
+                "expected_outcome": "Would delay all shipments, not just this one",
+                "selected": false
+              },
+              {
+                "branch_id": 3,
+                "hypothesis": "Carrier handoff delay at customs/border → routing inefficiency",
+                "supporting_evidence": [
+                  "Supplier SPLR-B has 46% OTIF (below target)",
+                  "Average delay 2 days for this carrier"
+                ],
+                "contradicting_evidence": [
+                  "No specific customs event logged",
+                  "Temperature alert coincides with delay timing"
+                ],
+                "confidence_score": 0.60,
+                "expected_outcome": "2-3 day delay, but doesn't explain quarantine status",
+                "selected": false
+              }
+            ],
+            "selection_method": "evidence_weighted_scoring",
+            "exploration_epsilon": 0.1,
+            "temperature": 0.7
+          }
+        },
+  
+        "actions_taken": [
+          {
+            "action": "query_sensor_telemetry",
+            "params": {"shipment_id": "SHP-001-1", "time_window": "2025-07-19 to 2025-07-24"},
+            "result_summary": "Temperature excursion detected: 29.3°C for 2 hours"
+          },
+          {
+            "action": "query_qa_events", 
+            "params": {"shipment_id": "SHP-001-1"},
+            "result_summary": "QA hold initiated 2025-07-23T18:00:00Z"
+          },
+          {
+            "action": "query_trialops_events",
+            "params": {"site_id": "SITE-001", "date_range": "2025-07-17 to 2025-07-24"},
+            "result_summary": "Documentation shortage event (resolved 2025-07-24)"
+          }
+        ],
+  
+        "state_update": {
+          "query_history": ["sensor_telemetry", "qa_events", "trialops_events"],
+          "conversation_buffer": ["turn_1", "turn_2"],
+          "artifacts_generated": []
+        },
+  
+        "reward_signal": 0.0,
+        "reward_components": {
+          "human_feedback": null,
+          "task_progress": 0.25,
+          "correctness": null
+        },
+        "feedback_wait": true,
+        "feedback_type": "hypothesis_validation"
+      },
+  
+      {
+        "turn_id": 3,
+        "role": "assistant",
+        "utterance": "Timeline assembled. Carrier temperature excursion (60% contribution) triggered QA hold (30% contribution); minor administrative delay at site (10% contribution).",
+        "timestamp": "2025-07-24T10:01:30Z",
+  
+        "artifact": {
+          "artifact_id": "audit_trail_001",
+          "artifact_type": "audit_timeline",
+          "format": "structured_json",
+          
+          "content": {
+            "audit_trail_timeline": [
+              {
+                "event_id": "E1",
+                "timestamp": "2025-07-19T06:00:00Z",
+                "relative_time": "T+0h",
+                "event": "Shipment dispatched from MainDC",
+                "owner": "Logistics",
+                "data_source": "logistics_shipments",
+                "status": "Normal"
+              },
+              {
+                "event_id": "E2",
+                "timestamp": "2025-07-23T14:30:00Z",
+                "relative_time": "T+104.5h",
+                "event": "Temperature excursion detected: 29.3°C (threshold: 8°C)",
+                "owner": "Carrier_SPLR-B",
+                "data_source": "sensor_alerts",
+                "status": "Critical",
+                "impact": "Triggers QA review protocol"
+              },
+              {
+                "event_id": "E3",
+                "timestamp": "2025-07-23T16:30:00Z",
+                "relative_time": "T+106.5h",
+                "event": "Temperature returns to normal range",
+                "owner": "Carrier_SPLR-B",
+                "data_source": "sensor_telemetry",
+                "status": "Resolved",
+                "total_excursion_duration_hrs": 2.0
+              },
+              {
+                "event_id": "E4",
+                "timestamp": "2025-07-23T18:00:00Z",
+                "relative_time": "T+108h",
+                "event": "QA hold initiated pending temperature impact review",
+                "owner": "QA_Team",
+                "data_source": "wms_quarantine_log",
+                "status": "In_Progress",
+                "sla_impact": "24-48 hour review window"
+              },
+              {
+                "event_id": "E5",
+                "timestamp": "2025-07-17T09:00:00Z",
+                "relative_time": "T-46h (pre-shipment)",
+                "event": "Site SITE-001: SHORTAGE_START - Missing regulatory documentation",
+                "owner": "Site_Operations",
+                "data_source": "trialops_events",
+                "status": "Blocking",
+                "note": "Pre-existing condition affecting multiple shipments"
+              },
+              {
+                "event_id": "E6",
+                "timestamp": "2025-07-24T08:00:00Z",
+                "relative_time": "T+122h",
+                "event": "Site documentation issue resolved (SHORTAGE_RESOLVE)",
+                "owner": "Site_Operations", 
+                "data_source": "trialops_events",
+                "status": "Resolved"
+              },
+              {
+                "event_id": "E7",
+                "timestamp": "2025-07-24T10:00:00Z",
+                "relative_time": "T+124h (current)",
+                "event": "Current status: Quarantined, awaiting QA decision",
+                "owner": "QA_Team",
+                "data_source": "logistics_shipments",
+                "status": "Pending"
+              }
+            ],
+  
+            "accountability_summary": [
+              {
+                "owner": "Carrier_SPLR-B",
+                "contribution_pct": 60,
+                "delay_hours_attributed": 28.8,
+                "root_cause": "Cold chain temperature excursion (29.3°C for 2 hours)",
+                "accountability_level": "Primary",
+                "required_action": "Submit CAPA and calibrated probe trace within 24 hours"
+              },
+              {
+                "owner": "QA_Team",
+                "contribution_pct": 30,
+                "delay_hours_attributed": 14.4,
+                "root_cause": "Mandatory QA hold for temperature excursion review",
+                "accountability_level": "Secondary",
+                "required_action": "Expedite stability data review for conditional release decision"
+              },
+              {
+                "owner": "Site_Operations",
+                "contribution_pct": 10,
+                "delay_hours_attributed": 4.8,
+                "root_cause": "Pre-existing documentation gap at site activation",
+                "accountability_level": "Tertiary",
+                "required_action": "Pre-stage all regulatory documents for future shipments"
+              }
+            ],
+  
+            "critical_path_analysis": {
+              "bottleneck": "QA hold duration",
+              "current_duration_hrs": 16,
+              "expected_duration_hrs": "12-48",
+              "time_remaining_hrs": 4,
+              "breach_risk": "MEDIUM"
+            }
+          }
+        },
+  
+        "reasoning": {
+          "cot": {
+            "steps": [
+              {
+                "step_id": 1,
+                "description": "Compute time contribution by calculating delay hours attributed to each owner against total SLA window",
+                "formula": "contribution_pct = (owner_delay_hours / total_delay_hours) * 100",
+                "calculation": "Carrier: 28.8h / 48h = 60%, QA: 14.4h / 48h = 30%, Site: 4.8h / 48h = 10%"
+              }
+            ]
+          }
+        },
+  
+        "actions_taken": [
+          {
+            "action": "join_audit_trail",
+            "params": {"sources": ["logistics_shipments", "sensor_alerts", "qa_events", "trialops_events"]},
+            "result_summary": "7 events merged into unified timeline"
+          },
+          {
+            "action": "compute_time_attribution",
+            "params": {"timeline": "audit_trail_001", "sla_target_hrs": 144},
+            "result_summary": "Accountability computed: Carrier 60%, QA 30%, Site 10%"
+          }
+        ],
+  
+        "state_update": {
+          "artifacts_generated": ["audit_trail_001"]
+        },
+  
+        "reward_signal": 0.0,
+        "reward_components": {
+          "artifact_quality": 0.85,
+          "task_progress": 0.50
+        },
+        "feedback_wait": false
+      },
+  
+      {
+        "turn_id": 4,
+        "role": "human",
+        "utterance": "Recommend next actions and estimate cost of inaction.",
+        "timestamp": "2025-07-24T10:02:00Z",
+        "intent": "request_recommendations_with_cost_analysis"
+      },
+  
+      {
+        "turn_id": 5,
+        "role": "assistant",
+        "utterance": "Proposed actions:\n1) Carrier: Provide calibrated probe trace & CAPA within 24h.\n2) QA: Expedite review with conditional release if MKT stability data supports 29.3°C for <2h exposure.\n3) Site Ops: Pre-stage documentation to avoid rework on future shipments.",
+        "timestamp": "2025-07-24T10:02:15Z",
+  
+        "reasoning": {
+          "cot": {
+            "steps": [
+              {
+                "step_id": 1,
+                "description": "Retrieve sensor telemetry to calculate exact temperature dwell time above threshold",
+                "action": "query_sensor_telemetry",
+                "key_finding": "Temperature was >8°C for exactly 2.0 hours, then returned to normal"
+              },
+              {
+                "step_id": 2,
+                "description": "Check product stability guidelines to determine if conditional release is viable",
+                "assumption": "Most biologics tolerate brief excursions if <4 hours at <30°C",
+                "decision": "Conditional release is feasible pending QA approval"
+              },
+              {
+                "step_id": 3,
+                "description": "Query finance_waste_log to estimate expected waste if shipment is rejected",
+                "data_source": "finance_waste_log",
+                "calculation": "Similar incidents: avg 9 units wasted @ $1416/unit = $12,744"
+              },
+              {
+                "step_id": 4,
+                "description": "Evaluate supplier_performance_sla to set escalation thresholds for carrier accountability",
+                "data_source": "supplier_performance_sla",
+                "key_finding": "SPLR-B OTIF at 46.2%, below target 95% - requires CAPA"
+              }
+            ],
+            "conclusion": "Conditional release minimizes waste ($70,800 saved) while maintaining quality if stability data confirms product integrity"
+          },
+  
+          "tot": {
+            "root_question": "Should we approve conditional release or reject and reship?",
+            "branches": [
+              {
+                "branch_id": 1,
+                "hypothesis": "Conditional release - Release shipment after expedited QA review if stability window supports brief excursion",
+                "supporting_evidence": [
+                  "Temperature excursion duration (2h) is within typical stability tolerance for biologics",
+                  "Product value at risk: $70,800",
+                  "SLA breach avoidance: Release within 12 hours meets target"
+                ],
+                "risks": [
+                  "Patient safety if stability data inadequate",
+                  "Regulatory audit finding if decision not properly documented"
+                ],
+                "expected_outcome": {
+                  "waste_units": 0,
+                  "waste_cost_usd": 0,
+                  "sla_met": true,
+                  "resolution_time_hrs": 12
+                },
+                "confidence_score": 0.85,
+                "selected": true
+              },
+              {
+                "branch_id": 2,
+                "hypothesis": "Reject and reship - Destroy current shipment and dispatch replacement from inventory",
+                "supporting_evidence": [
+                  "Zero risk to patient safety",
+                  "No regulatory ambiguity"
+                ],
+                "risks": [
+                  "High waste cost: $70,800",
+                  "Additional 6-day delay for reship",
+                  "SLA breach (total delay: 8 days)"
+                ],
+                "expected_outcome": {
+                  "waste_units": 50,
+                  "waste_cost_usd": 70800,
+                  "sla_met": false,
+                  "resolution_time_hrs": 144
+                },
+                "confidence_score": 0.50,
+                "selected": false
+              }
+            ],
+            "selection_method": "risk_weighted_expected_value",
+            "decision_criteria": {
+              "primary": "patient_safety",
+              "secondary": "cost_efficiency",
+              "tertiary": "sla_adherence"
+            }
+          }
+        },
+  
+        "actions_taken": [
+          {
+            "action": "query_sensor_telemetry",
+            "params": {"shipment_id": "SHP-001-1", "metric": "dwell_time_above_threshold"},
+            "result_summary": "Exact dwell time: 2.0 hours at 29.3°C"
+          },
+          {
+            "action": "query_finance_waste",
+            "params": {"event_type": "Quarantine", "lookback_days": 30},
+            "result_summary": "3 similar incidents, avg waste: 9 units @ $1416/unit"
+          }
+        ],
+  
+        "state_update": {
+          "query_history": ["sensor_telemetry", "finance_waste_log"]
+        },
+  
+        "reward_signal": 0.0,
+        "reward_components": {
+          "recommendation_quality": null,
+          "task_progress": 0.75
+        },
+        "feedback_wait": true,
+        "feedback_type": "recommendation_approval"
+      },
+  
+      {
+        "turn_id": 6,
+        "role": "assistant",
+        "utterance": "If rejected, expected waste resembles recent pattern: 50 units @ $70,800. Conditional release likely minimizes waste and meets SLA if stability data confirms product integrity within acceptable limits.",
+        "timestamp": "2025-07-24T10:02:45Z",
+  
+        "artifact": {
+          "artifact_id": "cost_impact_001",
+          "artifact_type": "cost_benefit_analysis",
+          "format": "structured_json",
+  
+          "content": {
+            "cost_impact_analysis": {
+              "scenario_1_conditional_release": {
+                "expected_waste_units": 0,
+                "expected_waste_cost_usd": 0,
+                "qa_review_cost_usd": 500,
+                "total_cost_usd": 500,
+                "sla_adherence": {
+                  "metric": "OnTimeRelease",
+                  "target_pct": 95.0,
+                  "projected_pct": 92.0,
+                  "met": false,
+                  "gap_pct": -3.0
+                },
+                "probability_of_success": 0.85,
+                "expected_value_usd": -425
+              },
+              "scenario_2_reject_reship": {
+                "expected_waste_units": 50,
+                "expected_waste_cost_usd": 70800,
+                "reship_logistics_cost_usd": 1200,
+                "total_cost_usd": 72000,
+                "sla_adherence": {
+                  "metric": "OnTimeRelease",
+                  "target_pct": 95.0,
+                  "projected_pct": 65.0,
+                  "met": false,
+                  "gap_pct": -30.0
+                },
+                "probability_of_success": 1.0,
+                "expected_value_usd": -72000
+              },
+              "scenario_comparison": {
+                "cost_avoidance_usd": 71575,
+                "time_saved_days": 6,
+                "sla_impact_delta_pct": 27.0
+              }
+            },
+  
+            "recommendation": {
+              "primary": "Proceed with conditional release if QA stability window holds",
+              "contingency": "If QA review identifies degradation, reject and reship expedited",
+              "rationale": "Expected value of conditional release ($-425) significantly better than reject/reship ($-72,000)",
+              "confidence": 0.85
+            },
+  
+            "risk_mitigation": {
+              "patient_safety": "QA must confirm product quality meets specifications before release",
+              "regulatory_compliance": "Document decision rationale with stability data reference in audit trail",
+              "supply_continuity": "Monitor inventory levels at SITE-001 to ensure no stockout during review"
+            }
+          }
+        },
+  
+        "reasoning": {
+          "cot": {
+            "steps": [
+              {
+                "step_id": 1,
+                "description": "Calculate expected value for each scenario using: EV = P(success) * cost",
+                "calculation": {
+                  "conditional_release": "0.85 * $500 = $425",
+                  "reject_reship": "1.0 * $72,000 = $72,000"
+                }
+              },
+              {
+                "step_id": 2,
+                "description": "Factor in SLA impact using historical penalty rates",
+                "assumption": "SLA breach costs estimated at 5% of shipment value per week delay",
+                "impact": "Conditional release minimizes SLA penalty"
+              }
+            ]
+          }
+        },
+  
+        "state_update": {
+          "artifacts_generated": ["audit_trail_001", "cost_impact_001"]
+        },
+  
+        "reward_signal": 0.88,
+        "reward_components": {
+          "recommendation_quality": 0.90,
+          "cost_accuracy": 0.85,
+          "task_progress": 0.90,
+          "human_feedback": null
+        },
+        "feedback_wait": false
+      },
+  
+      {
+        "turn_id": 7,
+        "role": "human",
+        "utterance": "Approved. Generate compliance-ready report and assign owners.",
+        "timestamp": "2025-07-24T10:03:00Z",
+        "intent": "approve_and_finalize",
+        "human_feedback": {
+          "rating": 5,
+          "comments": "Thorough analysis, clear recommendations",
+          "approved": true
+        }
+      },
+  
+      {
+        "turn_id": 8,
+        "role": "assistant",
+        "utterance": "Report created and owners assigned. All actions have defined owners and SLA-based deadlines.",
+        "timestamp": "2025-07-24T10:03:30Z",
+  
+        "artifact": {
+          "artifact_id": "compliance_report_001",
+          "artifact_type": "gxp_compliance_report",
+          "format": "structured_document",
+  
+          "content": {
+            "header": {
+              "document_id": "CAPA-SHP-001-1-20250724",
+              "document_type": "Temperature Excursion Investigation Report",
+              "study_code": "BLZ-137",
+              "shipment_id": "SHP-001-1",
+              "batch_id": "LOT-003-A",
+              "report_date": "2025-07-24",
+              "prepared_by": "ClosedLoop_AI_Agent",
+              "reviewed_by": "TBD",
+              "approved_by": "TBD",
+              "status": "Draft"
+            },
+  
+            "shipment_details": {
+              "product": "DrugX",
+              "ndc": "NDC-0006-5331-01",
+              "quantity": 50,
+              "origin": "MainDC (DE)",
+              "destination": "SITE-001 (NL)",
+              "dispatch_date": "2025-07-19",
+              "original_eta": "2025-07-25",
+              "current_status": "Quarantined"
+            },
+  
+            "incident_summary": {
+              "incident_type": "Cold Chain Temperature Excursion",
+              "detection_timestamp": "2025-07-23T14:30:00Z",
+              "resolution_timestamp": "2025-07-23T16:30:00Z",
+              "duration_hours": 2.0,
+              "max_temperature_c": 29.3,
+              "threshold_c": 8.0,
+              "rule_triggered": "TEMP_GT_27C_2H",
+              "immediate_action": "QA hold initiated"
+            },
+  
+            "root_cause_analysis": {
+              "primary_cause": "Carrier SPLR-B experienced temperature control failure during transit",
+              "contributing_factors": [
+                "Refrigeration unit malfunction (suspected)",
+                "Site documentation delay (pre-existing)",
+                "Supplier OTIF below target (46.2% vs 95% target)"
+              ],
+              "evidence": [
+                "Sensor data confirms 29.3°C for 2 hours",
+                "No prior temperature alerts for this shipment",
+                "Carrier SPLR-B has pattern of delays (avg 2.02 days)"
+              ]
+            },
+  
+            "quality_impact_assessment": {
+              "product_stability": "Under review - pending MKT stability data analysis",
+              "patient_safety_risk": "Low to Medium (conditional on QA approval)",
+              "regulatory_impact": "Requires documentation in TMF and CAPA to carrier",
+              "financial_impact": {
+                "value_at_risk_usd": 70800,
+                "potential_waste_if_rejected": 70800,
+                "qa_review_cost": 500
+              }
+            },
+  
+            "corrective_actions": [
+              {
+                "action_id": "CA-001",
+                "owner": "Carrier_SPLR-B",
+                "action": "Submit calibrated temperature probe trace for entire shipment journey",
+                "due_date": "2025-07-25T10:00:00Z",
+                "due_hours": 24,
+                "priority": "Critical",
+                "status": "Assigned"
+              },
+              {
+                "action_id": "CA-002",
+                "owner": "Carrier_SPLR-B",
+                "action": "Provide CAPA documenting refrigeration unit failure investigation and preventive actions",
+                "due_date": "2025-07-25T10:00:00Z",
+                "due_hours": 24,
+                "priority": "Critical",
+                "status": "Assigned"
+              },
+              {
+                "action_id": "CA-003",
+                "owner": "QA_Team",
+                "action": "Complete conditional release review using MKT stability data for 29.3°C / 2hr exposure",
+                "due_date": "2025-07-24T22:00:00Z",
+                "due_hours": 12,
+                "priority": "Urgent",
+                "status": "In_Progress"
+              },
+              {
+                "action_id": "CA-004",
+                "owner": "Site_Operations_SITE-001",
+                "action": "Pre-stage all required regulatory documentation for future shipments to prevent activation delays",
+                "due_date": "2025-07-25T18:00:00Z",
+                "due_hours": 32,
+                "priority": "Medium",
+                "status": "Assigned"
+              }
+            ],
+  
+            "preventive_actions": [
+              {
+                "action_id": "PA-001",
+                "owner": "Logistics_Manager",
+                "action": "Escalate carrier performance review for SPLR-B (OTIF 46.2% vs 95% target)",
+                "due_date": "2025-07-31",
+                "priority": "High"
+              },
+              {
+                "action_id": "PA-002",
+                "owner": "Supply_Chain_Director",
+                "action": "Evaluate alternative carriers for DE->NL route",
+                "due_date": "2025-08-15",
+                "priority": "Medium"
+              }
+            ],
+  
+            "decision": {
+              "recommendation": "Conditional Release",
+              "rationale": "Temperature excursion duration (2 hours at 29.3°C) falls within acceptable limits per product stability profile, pending QA confirmation",
+              "conditions": [
+                "QA review confirms product meets quality specifications",
+                "Carrier provides satisfactory CAPA",
+                "Stability data supports brief temperature exposure"
+              ],
+              "alternative_if_rejected": "Reject and expedite replacement shipment from inventory (6-day delay, $70,800 waste)"
+            },
+  
+            "signoff": {
+              "prepared_by": {
+                "name": "ClosedLoop AI Agent",
+                "role": "Automated Investigation System",
+                "date": "2025-07-24T10:03:30Z"
+              },
+              "reviewed_by": {
+                "name": "TBD",
+                "role": "QA Manager",
+                "date": null
+              },
+              "approved_by": {
+                "name": "TBD",
+                "role": "Quality Director",
+                "date": null
+              }
+            },
+  
+            "appendices": {
+              "appendix_a": "Audit trail timeline (see artifact audit_trail_001)",
+              "appendix_b": "Cost-benefit analysis (see artifact cost_impact_001)",
+              "appendix_c": "Sensor telemetry data (attached separately)",
+              "appendix_d": "Supplier performance data (supplier_performance_sla.csv)"
+            }
+          }
+        },
+  
+        "reasoning": {
+          "cot": {
+            "steps": [
+              {
+                "step_id": 1,
+                "description": "Structure report according to GxP compliance requirements (21 CFR Part 11)",
+                "sections_included": ["header", "shipment_details", "incident_summary", "root_cause", "quality_impact", "corrective_actions", "decision", "signoff"]
+              },
+              {
+                "step_id": 2,
+                "description": "Assign action owners based on accountability analysis from audit trail",
+                "mapping": "Carrier (60%) → CAPA + probe trace, QA (30%) → expedited review, Site (10%) → doc prep"
+              },
+              {
+                "step_id": 3,
+                "description": "Set deadlines using SLA-based urgency: Critical=24h, Urgent=12h, Medium=32h",
+                "rationale": "ETA is 62 hours away, QA review must complete within 12h to meet conditional release timeline"
+              }
+            ]
+          }
+        },
+  
+        "actions_taken": [
+          {
+            "action": "create_audit_document",
+            "params": {"format": "GxP_compliant", "sections": ["all"]},
+            "result_summary": "Complete compliance report generated with 8 sections"
+          },
+          {
+            "action": "assign_action_owners",
+            "params": {"recommendations": "from_tot_selected_branch"},
+            "result_summary": "4 corrective actions and 2 preventive actions assigned with deadlines"
+          }
+        ],
+  
+        "state_update": {
+          "artifacts_generated": ["audit_trail_001", "cost_impact_001", "compliance_report_001"],
+          "conversation_buffer": ["turn_1", "turn_2", "turn_3", "turn_4", "turn_5", "turn_6", "turn_7", "turn_8"]
+        },
+  
+        "reward_signal": 1.0,
+        "reward_components": {
+          "human_feedback_rating": 1.0,
+          "task_completion": 1.0,
+          "compliance_quality": 0.95,
+          "artifact_completeness": 1.0,
+          "waste_avoided_normalized": 1.0,
+          "sla_adherence_projected": 0.92
+        },
+        "done": true
+      }
+    ],
+  
+    "rl_metadata": {
+      "state_space": {
+        "type": "hybrid",
+        "numeric_dim": 16,
+        "categorical_dim": 7,
+        "temporal_dim": 4,
+        "derived_dim": 4,
+        "total_features": 31
+      },
+  
+      "action_space": {
+        "type": "hierarchical",
+        "high_level_cardinality": 4,
+        "low_level_cardinality": 15,
+        "total_possible_actions": 60
+      },
+  
+      "observation_space": {
+        "data_sources_available": 9,
+        "max_query_history": 20,
+        "max_conversation_buffer": 10,
+        "max_artifacts": 5
+      },
+  
+      "reward_function": {
+        "type": "composite",
+        "formula": "R = w1*human_rating + w2*waste_avoided + w3*sla_met + w4*time_efficiency + penalties",
+        "weights": {
+          "w1_human_rating": 0.30,
+          "w2_waste_avoided": 0.30,
+          "w3_sla_adherence": 0.25,
+          "w4_time_efficiency": 0.15
+        },
+        "normalization": {
+          "human_rating": "scale 1-5 to 0-1",
+          "waste_avoided": "(baseline_waste - actual_waste) / baseline_waste",
+          "sla_met": "1.0 if >=95%, else current_pct/95",
+          "time_efficiency": "1.0 - (actual_time / sla_time)"
+        },
+        "penalties": {
+          "cold_chain_violation_unaddressed": -10.0,
+          "gxp_non_compliance": -20.0,
+          "incorrect_accountability": -5.0,
+          "missing_required_artifact": -3.0
+        },
+        "total_episode_reward": 1.0,
+        "intermediate_rewards": [0.0, 0.0, 0.0, 0.0, 0.88, 1.0]
+      },
+  
+      "trajectory": {
+        "total_turns": 8,
+        "human_turns": 3,
+        "assistant_turns": 5,
+        "total_actions": 11,
+        "artifacts_created": 3,
+        "queries_executed": 8,
+        "reward_progression": [0.0, 0.0, 0.0, 0.0, 0.88, 1.0]
+      },
+  
+      "hitl": {
+        "feedback_points": [
+          {
+            "turn_id": 2,
+            "feedback_type": "hypothesis_validation",
+            "human_feedback": null,
+            "feedback_wait": true
+          },
+          {
+            "turn_id": 5,
+            "feedback_type": "recommendation_approval",
+            "human_feedback": null,
+            "feedback_wait": true
+          },
+          {
+            "turn_id": 7,
+            "feedback_type": "final_approval",
+            "human_feedback": {
+              "rating": 5,
+              "comments": "Thorough analysis, clear recommendations",
+              "approved": true,
+              "edits": null
+            },
+            "feedback_wait": false
+          }
+        ],
+        "feedback_schema": {
+          "rating": "integer 1-5",
+          "comments": "free text string",
+          "approved": "boolean",
+          "edits": "optional free text",
+          "override_action": "enum [approve, reject, modify, escalate]"
+        },
+        "total_feedback_received": 1,
+        "avg_human_rating": 5.0
+      },
+  
+      "training_metadata": {
+        "episode_quality_score": 0.95,
+        "use_for_training": true,
+        "scenario_difficulty": "high",
+        "scenario_tags": ["temp_excursion", "qa_hold", "conditional_release", "multi_owner_accountability"],
+        "data_completeness": 1.0,
+        "label_quality": "human_verified"
+      }
+    }
+  }
+  
+  

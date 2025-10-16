@@ -95,6 +95,8 @@ class MagenticUIConfig(BaseModel):
         sentinel_plan (SentinelPlanConfig, optional): Configuration for sentinel plan functionality. Default: SentinelPlanConfig().
         run_without_docker (bool, optional): If docker is not available, run without docker for browser, remove coder and filesurfer agents. Default: False.
         network_name (str, optional): The name of the network to use for the browser. Default: "my-network".
+        pharma_agent_enabled (bool, optional): Whether to enable the pharmaceutical investigation agent. Default: False.
+        pharma_data_dir (str, optional): Directory containing pharmaceutical data CSV files. Default: "mock_data".
     """
 
     model_client_configs: ModelClientConfigs = Field(default_factory=ModelClientConfigs)
@@ -129,3 +131,5 @@ class MagenticUIConfig(BaseModel):
     run_without_docker: bool = False
     browser_headless: bool = False
     network_name: str = "my-network"
+    pharma_agent_enabled: bool = False
+    pharma_data_dir: str = "mock_data"
