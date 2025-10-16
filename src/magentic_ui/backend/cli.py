@@ -83,6 +83,18 @@ def main(
             help="Run without docker. This will remove coder and filesurfer agents and disable live browser view.",
         ),
     ] = False,
+    pharma_agent_enabled: Annotated[
+        bool,
+        typer.Option(
+            "--pharma-agent-enabled",
+            help="Enable the pharmaceutical investigation agent for supply chain analysis.",
+        ),
+    ] = False,
+    pharma_data_dir: str = typer.Option(
+        "mock_data",
+        "--pharma-data-dir",
+        help="Directory containing pharmaceutical data CSV files.",
+    ),
 ):
     """
     Magentic-UI: A human-centered interface for web agents.
@@ -108,6 +120,8 @@ def main(
             upgrade_database=upgrade_database,
             config=config,
             run_without_docker=run_without_docker,
+            pharma_agent_enabled=pharma_agent_enabled,
+            pharma_data_dir=pharma_data_dir,
         )
 
 
@@ -122,6 +136,8 @@ def run_ui(
     upgrade_database: bool,
     config: Optional[str],
     run_without_docker: bool,
+    pharma_agent_enabled: bool = False,
+    pharma_data_dir: str = "mock_data",
 ):
     """
     Core logic to run the Magentic-UI web application.
@@ -219,6 +235,14 @@ def run_ui(
     env_vars["EXTERNAL_WORKSPACE_ROOT"] = appdir
     env_vars["INTERNAL_WORKSPACE_ROOT"] = appdir
     env_vars["RUN_WITHOUT_DOCKER"] = str(run_without_docker)
+    
+    # Set pharma agent environment variables
+    env_vars["PHARMA_AGENT_ENABLED"] = str(pharma_agent_enabled)
+    # Convert pharma_data_dir to absolute path if it's relative
+    pharma_data_dir_abs = pharma_data_dir
+    if not os.path.isabs(pharma_data_dir):
+        pharma_data_dir_abs = os.path.abspath(pharma_data_dir)
+    env_vars["PHARMA_DATA_DIR"] = pharma_data_dir_abs
 
     # Handle configuration file path
     if not config:
